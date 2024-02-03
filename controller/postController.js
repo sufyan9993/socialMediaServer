@@ -63,7 +63,7 @@ export const getPostLikesData = async (req, res) => {
         if (post.likes.length > 0) {
             likes = post.likes.map((data) => {
                 const url = `data:${data.user.profilePhoto.contentType};base64,${data.user.profilePhoto.data.toString('base64')}`
-                return { timestamp: data.timestamp, ...data.user._doc, profilePhoto: url  }
+                return { timestamp: data.timestamp, ...data.user._doc, profilePhoto: url }
             })
         }
         res.status(201).json({ success: true, likes })
