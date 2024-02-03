@@ -19,9 +19,6 @@ App.use(express.json())
 App.use('/Auth', AuthRouter)
 App.use('/User', userRouter)
 App.use('/Post', postRouter)
-App.get('/',(req,res)=>{
-    res.send('hello world')
-})
 
 
 

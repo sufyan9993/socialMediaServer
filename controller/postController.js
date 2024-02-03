@@ -9,7 +9,7 @@ export const getAllPost = async (req, res) => {
             const profilePhoto = `data:${post.user.profilePhoto.contentType};base64,${post.user.profilePhoto.data.toString('base64')}`
             const image = `data:${post.image.contentType};base64,${post.image.data.toString('base64')}`
             const likes = post.likes.map(data => data.user)
-            return { ...post._doc, likes, image, user: { ...post.user._doc, profilePhoto } }
+            return { ...post._doc, likes, image:'', user: { ...post.user._doc, profilePhoto:'' } }
         })
         console.log('posts');
 
