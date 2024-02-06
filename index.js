@@ -13,7 +13,6 @@ const port = process.env.PORT || 8080
 const URL = process.env.DB_NAME || 'mongodb://0.0.0.0:27017/SocialMedia'
 
 
-
 ConnectDB(URL)
 
 App.use(cors('*'))

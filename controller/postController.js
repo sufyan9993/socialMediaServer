@@ -3,13 +3,11 @@ import userModel from "../model/userModel.js";
 
 export const getAllPost = async (req, res) => {
     try {
-        console.log('getting the post');
         const Posts = await postModel.find().populate('user', 'username profilePhoto').sort({ createdAt: -1 })
         const newPosts = Posts.map((post) => {
             const likes = post.likes.map(data => data.user)
-            return { ...post._doc, likes, user: { ...post.user._doc } }
+            return { ...post._doc, likes }
         })
-        console.log('successfully got the post');
         res.status(200).json({ success: true, posts: newPosts });
     } catch (error) {
         console.log(error.message);
@@ -118,5 +116,26 @@ export const deletePost = async (req, res) => {
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ success: false, error: error.message })
+    }
+}
+
+
+export const getSearchedPost = async (req, res) => {
+    try {
+        const { post } = req.params
+        let posts = await postModel.find({
+            title: {
+                $regex: `${post}`,
+                $options: 'i' // for case insensitive search
+            }
+        }).populate('user', 'username profilePhoto').sort({ createdAt: -1 })
+        const newPosts = posts.map((post) => {
+            const likes = post.likes.map(data => data.user)
+            return { ...post._doc, likes }
+        })
+        res.status(200).json({ success: true, posts: newPosts });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).json({ success: false, message: error.message })
     }
 }
