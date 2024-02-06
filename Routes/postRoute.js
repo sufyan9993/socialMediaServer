@@ -10,7 +10,7 @@ const postRouter = express.Router()
 
 postRouter.get('/GetSinglePost/:id', getSinglePost)
 postRouter.get('/GetAllPost', getAllPost)
-userRouter.get('/search/:username', getSearchedPost)
+userRouter.get('/search/:post', getSearchedPost)
 
 postRouter.post('/AddPost', verifyUser, upload.single('file'), GetImageUrl, addPost)
 postRouter.put('/:postId/like', verifyUser, likePost)
