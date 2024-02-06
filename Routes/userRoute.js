@@ -2,6 +2,7 @@ import express from 'express'
 import { getUsersFollower, getUsersFollowing, getSearchedUser, followUser, unSavePost, updateProfile, getUserByUsername, getUserPostByUsername, getUserSensitiveData, savePost, getSavedPost, unfollowUser } from '../controller/userController.js'
 import { verifyUser } from '../middleWare/Authentication.js'
 import { upload } from '../middleWare/multer.js'
+import GetImageUrl from '../middleWare/firebaseImage.js'
 const userRouter = express.Router()
 
 userRouter.get('/:username', getUserByUsername)
@@ -19,7 +20,7 @@ userRouter.get('/savedPosts/:username', verifyUser, getSavedPost)
 userRouter.put('/follow', verifyUser, followUser)
 userRouter.put('/unfollow', verifyUser, unfollowUser)
 
-userRouter.put('/:username/updateProfile', verifyUser, upload.single('file'), updateProfile)
+userRouter.put('/:username/updateProfile', verifyUser, upload.single('file'),GetImageUrl, updateProfile)
 
 
 

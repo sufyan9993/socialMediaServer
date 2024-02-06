@@ -6,10 +6,7 @@ const schema = new mongoose.Schema({
         ref: "User",
     },
     title: { type: String, required: true },
-    image: {
-        data: { type: Buffer, required: true },
-        contentType: { type: String, required: true }
-    },
+    image: { type: String, required: true } ,
     caption: String,
     tags: Array,
     createdAt: { type: Date, default: Date.now() },

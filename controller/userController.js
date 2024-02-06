@@ -29,17 +29,13 @@ export const registerUser = async (req, res) => {
             fullname: req.body.fullname,
             email: req.body.email,
             password: hashedPassword,
-            profilePhoto: {
-                data: req.file.buffer,
-                contentType: 'image/png'
-            }
+            profilePhoto: req.ImageURL
         })
 
         const user = await newUser.save()
-        const { password, profilePhoto, tokens, posts, createdAt, email, ...rest } = user._doc
-        const url = `data:${profilePhoto.contentType};base64,${profilePhoto.data.toString('base64')}`
+        const { password, tokens, posts, createdAt, email, ...rest } = user._doc
         const jwtToken = user.generateToken()
-        res.status(200).json({ success: true, message: 'Successfully Registered', token: jwtToken, userData: { ...rest, profilePhoto: url } })
+        res.status(200).json({ success: true, message: 'Successfully Registered', token: jwtToken, userData: { ...rest } })
 
     } catch (error) {
         console.log(error.message);
@@ -53,15 +49,16 @@ export const loginUser = async (req, res) => {
         const { username } = req.body
         const userPass = req.body.password
         const user = await userModel.findOne({ username })
-
+        if (!user) {
+            throw new Error('Invalid credentials')
+        }
         const isValidated = await comparePassword(userPass, user?.password)
-        if (!user || !isValidated) {
-            return res.status(404).json({ success: false, message: 'Invalid credentials' })
+        if (!isValidated) {
+            throw new Error('Invalid credentials')
         } else {
-            const { password, tokens, posts, profilePhoto, createdAt, email, ...rest } = user._doc
-            const url = `data:${profilePhoto.contentType};base64,${profilePhoto.data.toString('base64')}`
+            const { password, tokens, posts, createdAt, email, ...rest } = user._doc
             const jwtToken = user.generateToken()
-            res.status(200).json({ success: true, message: 'successfully login', token: jwtToken, userData: { ...rest, profilePhoto: url } })
+            res.status(200).json({ success: true, message: 'successfully login', token: jwtToken, userData: { ...rest } })
         }
 
     } catch (error) {
@@ -80,10 +77,8 @@ export const getUserByUsername = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' })
         }
-        const url = `data:${user.profilePhoto.contentType};base64,${user.profilePhoto.data.toString('base64')}`
-        const updatedUser = { ...user._doc, profilePhoto: url, posts: user.posts.length }
-        const { password, tokens, email, createdAt, ...rest } = updatedUser
-        res.status(200).json({ success: true, userData: { ...rest } });
+        const { password, tokens, email, createdAt, ...rest } = user._doc 
+        res.status(200).json({ success: true, userData: { ...rest, posts: user.posts.length } });
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ success: false, error: error.message })
@@ -97,9 +92,7 @@ export const getUserSensitiveData = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' })
         }
-        const url = `data:${user.profilePhoto.contentType};base64,${user.profilePhoto.data.toString('base64')}`
-        const updatedUser = { ...user._doc, profilePhoto: url }
-        const { password, tokens, posts, createdAt, ...rest } = updatedUser
+        const { password, tokens, posts, createdAt, ...rest } = user._doc
         res.status(200).json({ success: true, userData: { ...rest } });
     } catch (error) {
         console.log(error.message);
@@ -126,10 +119,8 @@ export const getUserPostByUsername = async (req, res) => {
         }
 
         const newPosts = user.posts.map((post) => {
-            const profilePhoto = `data:${post.user.profilePhoto.contentType};base64,${post.user.profilePhoto.data.toString('base64')}`
-            const image = `data:${post.image.contentType};base64,${post.image.data.toString('base64')}`
             const likes = post.likes.map(data => data.user)
-            return { ...post._doc, likes, image, user: { ...post.user._doc, profilePhoto } }
+            return { ...post._doc, likes }
         })
         res.status(200).json({ success: true, posts: newPosts });
     } catch (error) {
@@ -152,18 +143,16 @@ export const updateProfile = async (req, res) => {
             if (!isValidated) {
                 throw new Error("Invalid password")
             } else {
-                data.password = await hashPassword(req.body.new_password)  
+                data.password = await hashPassword(req.body.new_password)
             }
         }
-        if (req.file) {
-            data.profilePhoto = { data: req.file.buffer, contentType: 'image/png' }
+        if (req.ImageUrl) {
+            data.profilePhoto = req.ImageURL
         }
         await userModel.findOneAndUpdate({ username: user }, data)
         const result = await userModel.findOne({ username: data.username || user })
-        const url = `data:${result.profilePhoto.contentType};base64,${result.profilePhoto.data.toString('base64')}`
-        const updatedUser = { ...result._doc, profilePhoto: url, posts: result.posts.length }
-        const { password, tokens, email, createdAt, ...rest } = updatedUser
-        res.status(200).json({ success: true, updatedUser: rest });
+        const { password, tokens, email, createdAt, ...rest } = result._doc
+        res.status(200).json({ success: true, updatedUser: { ...rest, posts: result.posts.length } });
     } catch (err) {
         console.log(err.message);
         res.status(500).json({ success: false, error: err.message })
@@ -232,10 +221,8 @@ export const getSavedPost = async (req, res) => {
             }
         })
         savedPosts = savedPosts.map(post => {
-            const profilePhoto = `data:${post.user.profilePhoto.contentType};base64,${post.user.profilePhoto.data.toString('base64')}`
-            const image = `data:${post.image.contentType};base64,${post.image.data.toString('base64')}`
             const likes = post.likes.map(data => data.user)
-            return { ...post._doc, image, likes, user: { ...post.user._doc, profilePhoto } }
+            return { ...post._doc, likes }
         })
 
         res.status(201).json({ success: true, savedPosts: savedPosts })
@@ -301,8 +288,7 @@ export const getSearchedUser = async (req, res) => {
             }
         })
         users = users.map((user) => {
-            const profilePhoto = `data:${user.profilePhoto.contentType};base64,${user.profilePhoto.data.toString('base64')}`
-            const { username, _id, fullname } = user._doc
+            const { username, _id, fullname, profilePhoto } = user._doc
             return { username, _id, fullname, profilePhoto }
         })
         res.status(200).json({ success: true, users })
@@ -316,10 +302,6 @@ export const getUsersFollower = async (req, res) => {
     try {
         const { username } = req.params
         let { follower } = await userModel.findOne({ username }).populate('follower', 'username fullname profilePhoto')
-        follower = follower.map((user) => {
-            const profilePhoto = `data:${user.profilePhoto.contentType};base64,${user.profilePhoto.data.toString('base64')}`
-            return { ...user._doc, profilePhoto }
-        })
         res.status(200).json({ success: true, users: follower })
     } catch (error) {
         console.log(error.message)
@@ -330,10 +312,6 @@ export const getUsersFollowing = async (req, res) => {
     try {
         const { username } = req.params
         let { following } = await userModel.findOne({ username }).populate('following', 'username fullname profilePhoto')
-        following = following.map((user) => {
-            const profilePhoto = `data:${user.profilePhoto.contentType};base64,${user.profilePhoto.data.toString('base64')}`
-            return { ...user._doc, profilePhoto }
-        })
         res.status(200).json({ success: true, users: following })
     } catch (error) {
         console.log(error.message)

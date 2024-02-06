@@ -3,15 +3,14 @@ import userModel from "../model/userModel.js";
 
 export const getAllPost = async (req, res) => {
     try {
+        console.log('getting the post');
         const Posts = await postModel.find().populate('user', 'username profilePhoto').sort({ createdAt: -1 })
         const newPosts = Posts.map((post) => {
-            const profilePhoto = `data:${post.user.profilePhoto.contentType};base64,${post.user.profilePhoto.data.toString('base64')}`
-            const image = `data:${post.image.contentType};base64,${post.image.data.toString('base64')}`
             const likes = post.likes.map(data => data.user)
-            return { ...post._doc, likes, image, user: { ...post.user._doc, profilePhoto } }
+            return { ...post._doc, likes, user: { ...post.user._doc } }
         })
+        console.log('successfully got the post');
         res.status(200).json({ success: true, posts: newPosts });
-
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ success: false, message: error.message })
@@ -27,10 +26,7 @@ export const addPost = async (req, res) => {
             caption,
             ...(tags.trim() !== '' && { tags: tags.split(',') }),
             createdAt: new Date(),
-            image: {
-                data: req.file.buffer,
-                contentType: 'image/png'
-            },
+            image: req.ImageURL,
             user: req.user._id
         })
         const savedPost = await newPost.save()
@@ -62,8 +58,7 @@ export const getPostLikesData = async (req, res) => {
         let likes = []
         if (post.likes.length > 0) {
             likes = post.likes.map((data) => {
-                const url = `data:${data.user.profilePhoto.contentType};base64,${data.user.profilePhoto.data.toString('base64')}`
-                return { timestamp: data.timestamp, ...data.user._doc, profilePhoto: url }
+                return { timestamp: data.timestamp, ...data.user._doc }
             })
         }
         res.status(201).json({ success: true, likes })

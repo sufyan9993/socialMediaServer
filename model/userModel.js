@@ -6,10 +6,7 @@ const schema = new mongoose.Schema({
     fullname: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    profilePhoto: {
-        data: Buffer,
-        contentType: String
-    },
+    profilePhoto: { type: String, required: true },
     bio: { type: String },
     follower: [
         {
