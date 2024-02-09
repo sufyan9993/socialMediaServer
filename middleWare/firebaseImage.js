@@ -8,7 +8,8 @@ const storage = getStorage()
 const GetImageUrl = async (req, res, next) => {
     try {
         if (req.file) {
-            const storageRef = ref(storage, `socialize/${Date.now() + req.file.originalname}`)
+            const path = req.path.split('/')[req.path.split('/').length - 1]
+            const storageRef = ref(storage, `socialize/${path==='register'?'UserProfile':'UsersPost'}/${Date.now() + req.file.originalname}`)
             const metaData = {
                 contentType: req.file.mimetype
             }
