@@ -40,11 +40,13 @@ export const addPost = async (req, res) => {
 
 export const getSinglePost = async (req, res) => {
     try {
-        const post = await postModel.findById(req.params.id)
-        res.status(201).json({ success: true, post })
-    } catch (error) {
+        const post = await postModel.findById(req.params.id).populate('user', 'username profilePhoto')
+        if (!post) throw new Error("No post found")
+        const likes = post.likes.map(data => data.user)
+        res.status(201).json({ success: true, post: [{ ...post._doc, likes }] })
+    } catch (error) {       
         console.log(error.message)
-        res.status(500).json({ success: false, error: error.message })
+        res.status(500).json({ success: false, message: error.message })
     }
 }
 
