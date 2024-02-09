@@ -1,3 +1,4 @@
+import { DeleteImage } from "../middleWare/firebaseImage.js";
 import postModel from "../model/postModel.js";
 import userModel from "../model/userModel.js";
 
@@ -44,7 +45,7 @@ export const getSinglePost = async (req, res) => {
         if (!post) throw new Error("No post found")
         const likes = post.likes.map(data => data.user)
         res.status(201).json({ success: true, post: [{ ...post._doc, likes }] })
-    } catch (error) {       
+    } catch (error) {
         console.log(error.message)
         res.status(500).json({ success: false, message: error.message })
     }
@@ -107,8 +108,9 @@ export const removeLike = async (req, res) => {
 export const deletePost = async (req, res) => {
     try {
         const { postId } = req.params
-        const { user } = await postModel.findById(postId)
+        const { user, image } = await postModel.findById(postId)
         await postModel.findByIdAndDelete(postId)
+        DeleteImage(image)
         await userModel.findByIdAndUpdate(user, {
             $pull: {
                 posts: postId

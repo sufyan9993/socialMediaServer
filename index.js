@@ -6,7 +6,6 @@ import AuthRouter from './Routes/authRoute.js'
 import userRouter from './Routes/userRoute.js'
 import postRouter from './Routes/postRoute.js'
 
-
 config()
 const App = express()
 const port = process.env.PORT || 8080
@@ -21,10 +20,5 @@ App.use(express.json())
 App.use('/Auth', AuthRouter)
 App.use('/User', userRouter)
 App.use('/Post', postRouter)
-
-
-
-
-
 
 App.listen(port)

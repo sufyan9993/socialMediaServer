@@ -2,7 +2,7 @@ import express from 'express'
 import { addPost, getSearchedPost, deletePost, getAllPost, getPostLikesData, getSinglePost, likePost, removeLike } from '../controller/postController.js'
 import { verifyUser } from '../middleWare/Authentication.js'
 import { upload } from '../middleWare/multer.js'
-import GetImageUrl from '../middleWare/firebaseImage.js'
+import { GetImageUrl } from '../middleWare/firebaseImage.js'
 
 
 

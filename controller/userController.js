@@ -1,3 +1,4 @@
+import { DeleteImage } from "../middleWare/firebaseImage.js";
 import postModel from "../model/postModel.js";
 import userModel from "../model/userModel.js";
 import bcrypt from 'bcrypt'
@@ -77,7 +78,7 @@ export const getUserByUsername = async (req, res) => {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' })
         }
-        const { password, tokens, email, createdAt, ...rest } = user._doc 
+        const { password, tokens, email, createdAt, ...rest } = user._doc
         res.status(200).json({ success: true, userData: { ...rest, posts: user.posts.length } });
     } catch (error) {
         console.log(error.message);
@@ -137,17 +138,18 @@ export const updateProfile = async (req, res) => {
         const data = {
             ...req.body,
         }
+        const userDB = await userModel.findOne({ username: user })
         if (req.body.password) {
-            const { password } = await findOne({ username: user })
-            const isValidated = await comparePassword(req.body.password, password)
+            const isValidated = await comparePassword(req.body.password, userDB.password)
             if (!isValidated) {
                 throw new Error("Invalid password")
             } else {
                 data.password = await hashPassword(req.body.new_password)
             }
         }
-        if (req.ImageUrl) {
+        if (req.ImageURL) {
             data.profilePhoto = req.ImageURL
+            DeleteImage(userDB.profilePhoto)
         }
         await userModel.findOneAndUpdate({ username: user }, data)
         const result = await userModel.findOne({ username: data.username || user })
